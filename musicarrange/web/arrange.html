@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>Arrangement — NOVA</title>
+<link rel="stylesheet" href="/styles.css"/>
+</head>
+<body>
+<div class="site">
+  <header class="mast">
+    <a class="brand" href="/">Nova</a>
+    <nav>
+      <a href="/recruitment">Recruitment</a>
+      <a href="/arrange" aria-current="page">Arrangement</a>
+    </nav>
+  </header>
+  <section class="hero">
+    <p class="kicker">Arrangement service</p>
+    <h1>Bring the score. Leave with parts.</h1>
+    <p class="lede">Upload the original sheet music. Say who is playing. Nova reads every staff, rewrites the notes for that ensemble, and gives you a PDF of the full score and a PDF of each part.</p>
+  </section>
+  <form class="panel" id="desk">
+    <label for="score">Score</label>
+    <input id="score" name="score" type="file" accept=".pdf,.png,.jpg,.jpeg,.webp,.abc,.xml,.musicxml,.mxl" required/>
+    <label>Players</label>
+    <div id="parts"></div>
+    <div class="actions">
+      <button type="button" class="secondary" id="add-part">Add part</button>
+    </div>
+    <p class="lineup quiet" id="lineup"></p>
+    <label class="check"><input id="rules" type="checkbox"/> Use the instant arranger instead of the model</label>
+    <div class="actions">
+      <button type="submit">Arrange</button>
+      <span class="status" id="status"></span>
+    </div>
+    <div class="results" id="results" hidden></div>
+  </form>
+</div>
+<script>
+const form = document.getElementById("desk");
+const status = document.getElementById("status");
+const results = document.getElementById("results");
+const parts = document.getElementById("parts");
+const lineup = document.getElementById("lineup");
+
+const instruments = [
+  ["violin", "Violin"],
+  ["viola", "Viola"],
+  ["cello", "Cello"],
+  ["bass", "Double bass"],
+  ["flute", "Flute"],
+  ["oboe", "Oboe"],
+  ["clarinet", "Clarinet in Bb"],
+  ["alto-sax", "Alto sax in Eb"],
+  ["tenor-sax", "Tenor sax in Bb"],
+  ["trumpet", "Trumpet in Bb"],
+  ["horn", "Horn in F"],
+  ["trombone", "Trombone"],
+  ["guitar", "Guitar"],
+  ["piano", "Piano"],
+  ["voice", "Voice"]
+];
+
+function addPart(id = "violin", count = 1) {
+  const row = document.createElement("div");
+  row.className = "part-row";
+  const select = document.createElement("select");
+  select.setAttribute("aria-label", "Instrument");
+  for (const [value, label] of instruments) {
+    const option = document.createElement("option");
+    option.value = value;
+    option.textContent = label;
+    if (value === id) option.selected = true;
+    select.append(option);
+  }
+  const number = document.createElement("input");
+  number.type = "number";
+  number.min = "1";
+  number.max = "12";
+  number.value = String(count);
+  number.setAttribute("aria-label", "Number of players");
+  const remove = document.createElement("button");
+  remove.type = "button";
+  remove.className = "secondary";
+  remove.textContent = "Remove";
+  remove.addEventListener("click", () => {
+    row.remove();
+    showLineup();
+  });
+  select.addEventListener("change", showLineup);
+  number.addEventListener("input", showLineup);
+  row.append(select, number, remove);
+  parts.append(row);
+  showLineup();
+}
+
+function roster() {
+  return [...parts.querySelectorAll(".part-row")].map((row) => {
+    const count = Math.max(1, Math.min(12, Number(row.querySelector("input").value) || 1));
+    return { id: row.querySelector("select").value, count };
+  });
+}
+
+function showLineup() {
+  const rows = roster();
+  if (!rows.length) {
+    lineup.textContent = "Add at least one part.";
+    return;
+  }
+  lineup.textContent = rows.map((row) => {
+    const name = instruments.find((item) => item[0] === row.id)[1];
+    return row.count === 1 ? name : `${row.count} × ${name}`;
+  }).join(", ");
+}
+
+addPart("violin", 2);
+addPart("viola", 1);
+addPart("cello", 1);
+
+form.addEventListener("submit", async (event) => {
+  event.preventDefault();
+  const rows = roster();
+  if (!rows.length) {
+    status.className = "status error";
+    status.textContent = "Add at least one part.";
+    return;
+  }
+  results.hidden = true;
+  results.replaceChildren();
+  status.className = "status";
+  status.textContent = "Reading the score…";
+  const body = new FormData();
+  body.set("score", document.getElementById("score").files[0]);
+  body.set("ensemble", rows.map((row) => `${row.id} x ${row.count}`).join(" + "));
+  if (document.getElementById("rules").checked) body.set("rules", "1");
+  let job;
+  try {
+    const response = await fetch("/api/arrange", { method: "POST", body });
+    job = await response.json();
+    if (!response.ok) throw new Error(job.error || "The desk could not start.");
+  } catch (err) {
+    status.className = "status error";
+    status.textContent = err.message;
+    return;
+  }
+  const timer = setInterval(async () => {
+    const response = await fetch("/api/jobs/" + job.id);
+    const state = await response.json();
+    if (state.status === "running") {
+      status.textContent = "Writing the parts…";
+      return;
+    }
+    clearInterval(timer);
+    if (state.status === "error") {
+      status.className = "status error";
+      status.textContent = state.error || "The arrangement failed.";
+      return;
+    }
+    status.textContent = state.subtitle || "The parts are ready.";
+    results.hidden = false;
+    const preview = document.createElement("a");
+    preview.className = "button";
+    preview.href = state.preview;
+    preview.textContent = "Open the sheet music";
+    results.append(preview);
+    for (const file of state.pdfs) {
+      const card = document.createElement("div");
+      card.className = "card";
+      const name = document.createElement("div");
+      name.textContent = file.label;
+      const link = document.createElement("a");
+      link.className = "button secondary";
+      link.href = file.href;
+      link.download = "";
+      link.textContent = "Download PDF";
+      card.append(name, link);
+      results.append(card);
+    }
+  }, 1500);
+});
+
+document.getElementById("add-part").addEventListener("click", () => addPart("flute", 1));
+</script>
+</body>
+</html>

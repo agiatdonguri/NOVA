@@ -1,0 +1,68 @@
+%PDF-1.4
+1 0 obj
+<< /Type /Catalog /Pages 2 0 R >>
+endobj
+2 0 obj
+<< /Type /Pages /Count 1 /Kids [3 0 R] >>
+endobj
+3 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Contents 5 0 R /Resources << /Font << /F1 4 0 R >> >> >>
+endobj
+4 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Courier >>
+endobj
+5 0 obj
+<< /Length 918 >>
+stream
+BT
+/F1 10 Tf
+48 760 Td
+13 TL
+(Four-part score, concert pitch. Transcribe every voice, do not arrange.) Tj
+T*
+() Tj
+T*
+(% Melody: Beethoven, Ode to Joy \(public domain\).) Tj
+T*
+(% Harmony: written for this demo, not a historical edition.) Tj
+T*
+(T:Ode to Joy) Tj
+T*
+(M:4/4) Tj
+T*
+(L:1/4) Tj
+T*
+(Q:1/4=112) Tj
+T*
+(K:C) Tj
+T*
+(V:S name="Soprano" clef=treble) Tj
+T*
+(V:A name="Alto" clef=treble) Tj
+T*
+(V:T name="Tenor" clef=bass) Tj
+T*
+(V:B name="Bass" clef=bass) Tj
+T*
+([V:S] E E F G | G F E D | C C D E | E3/2 D/2 D2 | E E F G | G F E D | C C D E | D3/2 C/2 C2 |) Tj
+T*
+([V:A] C C C E | D C C B, | C C A, C | C3/2 B,/2 B,2 | C C C E | D C C B, | C C B, C | B,3/2 G,/2 G,2 |) Tj
+T*
+([V:T] G, G, A, C | B, A, G, G, | G, G, F, G, | G,3/2 G,/2 G,2 | G, G, A, C | B, A, G, G, | G, G, G, G, | G,3/2) Tj
+T*
+([V:B] C, C, F,, C, | G,, F,, C, G,, | C, C, D, C, | C,3/2 G,,/2 G,,2 | C, C, F,, C, | G,, F,, C, G,, | C, C, G) Tj
+ET
+endstream
+endobj
+xref
+0 6
+0000000000 65535 f 
+0000000009 00000 n 
+0000000058 00000 n 
+0000000115 00000 n 
+0000000241 00000 n 
+0000000309 00000 n 
+trailer << /Size 6 /Root 1 0 R >>
+startxref
+1278
+%%EOF
